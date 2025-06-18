@@ -1,0 +1,26 @@
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 13 
+names:
+  0: 'Platelets'
+  1: 'RBC'
+  2: 'WBC'
+  3: 'cast'
+  4: 'cryst' 
+  5: 'epith'
+  6: 'epithn'
+  7: 'eryth'
+  8: 'leuko'
+  9: 'mycete'
+  10: 'Dihidrato de CaOx'       
+  11: 'CaOx Monohidrato Ovoide' 
+  12: 'Fosfato'               
+
+roboflow:
+  workspace: giki-yybfj
+  project: urine-sediment-yolov8
+  version: 3
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/giki-yybfj/urine-sediment-yolov8/dataset/3

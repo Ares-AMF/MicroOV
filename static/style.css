@@ -1,0 +1,376 @@
+/* static/style.css - MONOCROMÁTICO INVERTIDO (Fondos Oscuros, Texto Claro) */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #1a1a1a; /* Fondo principal muy oscuro */
+    color: #e0e0e0; /* Texto principal claro */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #2a2a2a; /* Contenedores oscuros */
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada en oscuro */
+}
+
+/* Header */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #444444; /* Borde gris oscuro */
+}
+
+/* Ajustes para el contenedor del icono en el header */
+.header .logo-icon {
+    display: flex; /* Asegura que la imagen se centre dentro de este span si es más pequeña */
+    align-items: center;
+    justify-content: center;
+}
+
+/* Estilo para la IMAGEN del microscopio dentro del header */
+.header-microscope-icon {
+    height: 60px; /* Altura del icono. Ajusta según sea necesario */
+    width: auto; /* Mantiene la proporción original del SVG */
+    /* Si tu SVG es NEGRO y necesitas que se vea CLARO en el fondo oscuro, usa este filtro: */
+    filter: brightness(0) invert(1);
+    /* Si tu SVG ya es claro o tiene el color correcto, puedes quitar la línea de "filter" */
+}
+
+.header .app-title {
+    font-size: 2.2em;
+    font-weight: bold;
+    color: #ffffff; /* Título blanco */
+    margin: 0;
+}
+.header .app-subtitle {
+    font-size: 1em;
+    color: #aaaaaa; /* Subtítulo gris claro */
+    margin: 0;
+}
+
+h1 {
+    text-align: center;
+    color: #ffffff; /* Título principal blanco */
+    margin-bottom: 20px;
+    font-size: 2.5em;
+}
+.description {
+    text-align: center;
+    font-size: 1.1em;
+    color: #bbbbbb; /* Descripción gris claro */
+    margin-bottom: 50px;
+    line-height: 1.6;
+}
+
+.main-content {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.column {
+    flex: 1;
+    min-width: 350px;
+    padding: 20px;
+    border: 1px solid #444444; /* Borde gris oscuro */
+    border-radius: 8px;
+    background-color: #333333; /* Fondo de columna oscuro */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+}
+
+.column h2 {
+    text-align: center;
+    color: #ffffff; /* Título de columna blanco */
+    margin-bottom: 25px;
+    font-size: 1.8em;
+}
+
+/* --- Custom File Uploader --- */
+.custom-file-uploader {
+    border: 2px dashed #666666; /* Borde punteado gris medio */
+    border-radius: 10px;
+    padding: 25px;
+    text-align: center;
+    background-color: #383838; /* Fondo oscuro del uploader */
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.custom-file-uploader.drag-over {
+    border-color: #eeeeee; /* Borde muy claro al arrastrar */
+    background-color: #4a4a4a; /* Fondo un poco más claro al arrastrar */
+}
+
+.file-input {
+    display: none;
+}
+
+.uploader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    flex-grow: 1;
+}
+
+.uploader-content .icon {
+    font-size: 3.5em;
+    color: #999999; /* Icono gris */
+    margin-bottom: 15px;
+}
+.uploader-content .main-text {
+    font-size: 1.2em;
+    font-weight: 500;
+    color: #dddddd; /* Texto principal claro */
+    margin-bottom: 5px;
+}
+.uploader-content .sub-text {
+    font-size: 0.9em;
+    color: #cccccc; /* Texto secundario gris claro */
+    margin-bottom: 20px;
+}
+.uploader-content .browse-button {
+    background-color: #ffffff; /* Botón blanco */
+    color: #222222; /* Texto del botón oscuro */
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease, color 0.3s ease;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    margin-top: 15px;
+}
+.uploader-content .browse-button:hover {
+    background-color: #e0e0e0; /* Botón un poco más oscuro al pasar el ratón */
+    transform: translateY(-2px);
+}
+
+/* Image Preview in Uploader */
+#image-preview {
+    max-width: 100%;
+    max-height: 180px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid #555555; /* Pequeño borde para destacar en fondo oscuro */
+}
+
+#file-name-display {
+    font-size: 0.9em;
+    color: #cccccc;
+    margin-top: 10px;
+    word-break: break-all;
+    font-weight: 600;
+}
+
+/* --- Results Display --- */
+#results-display {
+    border: 2px dashed #666666; /* Borde punteado gris medio */
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    background-color: #383838; /* Fondo oscuro del área de resultados */
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #aaaaaa;
+}
+#results-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-top: 15px;
+    border: 1px solid #555555; /* Pequeño borde para destacar en fondo oscuro */
+}
+#results-message {
+    font-size: 1.1em;
+    color: #dddddd;
+}
+.loading-spinner {
+    border: 4px solid rgba(255, 255, 255, 0.2); /* Borde blanco translúcido */
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border-left-color: #ffffff; /* Spinner blanco */
+    animation: spin 1s ease infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* --- Analysis Details Tables --- */
+.analysis-details-section {
+    margin-top: 50px;
+    padding-top: 30px;
+    border-top: 1px solid #444444;
+}
+.analysis-details-section h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #ffffff; /* Título de sección blanco */
+    font-size: 2em;
+}
+.detections-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.detections-table th,
+.detections-table td {
+    border: 1px solid #4a4a4a; /* Borde de tabla oscuro */
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 0.95em;
+    color: #e0e0e0; /* Texto de celda claro */
+}
+.detections-table th {
+    background-color: #3d3d3d; /* Fondo de encabezado de tabla oscuro */
+    font-weight: 600;
+    color: #ffffff; /* Texto de encabezado blanco */
+    text-transform: uppercase;
+}
+.detections-table tr:nth-child(even) {
+    background-color: #333333; /* Filas pares un poco más oscuras */
+}
+.detections-table tr:hover {
+    background-color: #4a4a4a; /* Efecto hover más claro/oscuro */
+}
+.no-detections-message {
+    text-align: center;
+    padding: 20px;
+    background-color: #3a3a3a; /* Fondo oscuro para mensajes */
+    border: 1px solid #555555; /* Borde gris oscuro */
+    border-radius: 8px;
+    color: #bbbbbb; /* Texto claro para mensajes */
+    font-size: 1.1em;
+    margin-top: 20px;
+}
+
+
+/* --- Info Boxes --- */
+.info-boxes {
+    display: flex;
+    justify-content: space-around;
+    gap: 20px;
+    margin-top: 50px;
+    padding-top: 30px;
+    border-top: 1px solid #444444;
+    flex-wrap: wrap;
+}
+.info-box {
+    flex: 1;
+    min-width: 280px;
+    text-align: center;
+    padding: 25px;
+    border-radius: 10px;
+    background-color: #333333; /* Fondo de info box oscuro */
+    box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+    transition: transform 0.3s ease;
+}
+.info-box:hover {
+    transform: translateY(-5px);
+}
+.info-box .info-icon {
+    font-size: 2.5em;
+    color: #cccccc; /* Icono gris claro */
+    margin-bottom: 15px;
+}
+.info-box h3 {
+    font-size: 1.3em;
+    color: #ffffff;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+.info-box p {
+    font-size: 0.95em;
+    color: #bbbbbb;
+    line-height: 1.5;
+}
+
+/* Footer */
+.footer {
+    margin-top: 40px;
+    padding: 20px;
+    color: #aaaaaa;
+    font-size: 0.9em;
+    border-top: 1px solid #444444;
+    background-color: #2a2a2a;
+    border-radius: 0 0 10px 10px;
+
+    /* Propiedades para alinear la leyenda y el logo (apilados) */
+    display: flex;
+    flex-direction: column;   /* Apila los elementos verticalmente */
+    align-items: center;      /* Centra horizontalmente los elementos */
+    justify-content: center;  /* Centra verticalmente si hay espacio */
+    gap: 10px;                /* Espacio entre la frase y el logo */
+}
+
+.footer-legend {
+    margin: 0; /* Elimina el margen por defecto del párrafo */
+    line-height: 1;
+    font-size: 1.1em; /* Frase más grande */
+    color: #cccccc; /* Color ligeramente más claro para la leyenda */
+    text-align: center; /* Asegura que la leyenda también esté centrada */
+}
+
+.footer-logo {
+    width: 200px; /* Tamaño del logo: ajustado a 200px de ancho */
+    max-width: 80%; /* Asegura que el logo se ajuste en pantallas muy pequeñas */
+    height: auto;  /* Mantiene la proporción del logo */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+        align-items: center;
+    }
+    .column {
+        min-width: unset;
+        width: 100%;
+    }
+    .info-boxes {
+        flex-direction: column;
+        align-items: center;
+    }
+    .info-box {
+        width: 90%;
+        margin-bottom: 20px;
+    }
+    .footer {
+        gap: 5px; /* Ajusta el espacio para pantallas pequeñas si es necesario */
+    }
+}

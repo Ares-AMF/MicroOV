@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MicroV - Análisis de Sedimento Urinario</title>
+    
+    <link rel="icon" type="image/svg+xml" href="/static/VERTICAL_NEGRO_Logotipo_Chuuk.svg">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <span class="logo-icon">
+                <img src="/static/microscope.svg" alt="Microscopio Icono" class="header-microscope-icon">
+            </span>
+            <div>
+                <h1 class="app-title">MicroV</h1>
+                <p class="app-subtitle">by Chúuk</p>
+            </div>
+        </header>
+
+        <h1>Análisis automático de sedimento urinario</h1>
+        <p class="description">
+            Sube una imagen de microscopio de tu muestra EGO y obtén un análisis detallado de los
+            elementos celulares detectados usando inteligencia artificial.
+        </p>
+
+        <div class="main-content">
+            <div class="column">
+                <h2>Selecciona la imagen del microscopio</h2>
+                <div id="custom-file-uploader" class="custom-file-uploader">
+                    <input type="file" id="file-input" class="file-input" accept="image/jpeg, image/png">
+                    <div id="uploader-content" class="uploader-content">
+                        <div class="uploader-content">
+                            <span class="icon"><i class="fas fa-cloud-upload-alt"></i></span>
+                            <p class="main-text">Arrastra y suelta tu imagen aquí</p>
+                            <p class="sub-text">o</p>
+                            <button type="button" class="browse-button">Explorar archivos</button>
+                            <img id="image-preview" src="#" alt="Vista previa de la imagen" style="display: none;">
+                            <span id="file-name-display" style="display: none;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column">
+                <h2>Resultados de la Detección</h2>
+                <div id="results-display">
+                    <p id="results-message">Sube una imagen para analizar.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="count-analysis-details-section" class="analysis-details-section" style="display: none;">
+            <h2>Resumen de Elementos Detectados</h2>
+            <p id="no-detections-count-message" class="no-detections-message" style="display: none;">No se detectaron objetos en la muestra.</p>
+            <table class="detections-table">
+                <thead>
+                    <tr>
+                        <th>Clase</th>
+                        <th>Cantidad</th>
+                    </tr>
+                </thead>
+                <tbody id="detections-count-table-body">
+                    </tbody>
+            </table>
+        </div>
+
+        <div id="detailed-analysis-details-section" class="analysis-details-section" style="display: none;">
+            <h2>Detalle de Detecciones Individuales</h2>
+            <p id="no-detections-detailed-message" class="no-detections-message" style="display: none;">No hay detecciones individuales para mostrar.</p>
+            <table class="detections-table">
+                <thead>
+                    <tr>
+                        <th>Clase</th>
+                        <th>Confianza</th>
+                        <th>Bounding Box (x1, y1, x2, y2)</th>
+                    </tr>
+                </thead>
+                <tbody id="detections-detailed-table-body">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="info-boxes">
+            <div class="info-box">
+                <div class="info-icon"><i class="fas fa-hand-pointer"></i></div>
+                <h3>Fácil de usar</h3>
+                <p>Interfaz intuitiva para laboratoristas y estudiantes</p>
+            </div>
+            <div class="info-box">
+                <div class="info-icon"><i class="fas fa-robot"></i></div>
+                <h3>IA especializada</h3>
+                <p>Modelo entrenado específicamente para sedimento urinario</p>
+            </div>
+            <div class="info-box">
+                <div class="info-icon"><i class="fas fa-check-circle"></i></div>
+                <h3>Resultados precisos</h3>
+                <p>Detección y conteo automático de elementos celulares</p>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p class="footer-legend">Más que ciencia, una herramienta para ti</p>
+            <img src="/static/HORIZONTAL_BLANCO_Logotipo_Chuuk.svg" alt="Logotipo Chúuk" class="footer-logo">
+        </footer>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

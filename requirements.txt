@@ -1,0 +1,33 @@
+# Instalar numpy primero (Recomiendo hacer esto por separado ya que las versiones de Numpy 2.0.X no son estables)
+# pip install numpy==1.26.4
+
+# Dependencias para FastAPI y manejo de imágenes
+fastapi==0.115.12
+uvicorn==0.34.3
+Pillow==11.0.0
+python-multipart==0.0.20 # Para manejo de subidas de archivos en FastAPI
+Jinja2==3.1.4 # Aunque no lo uses directamente, es una dependencia de FastAPI si usas templates
+MarkupSafe==2.1.5 # Dependencia de Jinja2
+PyYAML==6.0.2 # Para cargar data.yaml si lo necesitas explícitamente, o usado por Ultralytics
+
+# Dependencias de Ultralytics y Torch
+ultralytics==8.3.153
+# Asegúrate de que esta versión de torch sea compatible con tu GPU.
+torch==2.2.1
+torchaudio==2.2.1 # Necesario si Torchvision lo requiere
+torchvision==0.17.1 # Comúnmente usado con Torch para procesamiento de imágenes
+
+# Otras dependencias que podrían ser transitivas o útiles para depuración/base
+# Aunque muchas de estas son transitivas, las incluyo para mayor compatibilidad
+annotated-types==0.7.0
+anyio==4.9.0
+certifi==2025.4.26
+charset-normalizer==3.4.2
+idna==3.10
+packaging==24.2
+pydantic==2.11.5
+pydantic_core==2.33.2
+requests==2.32.4
+sniffio==1.3.1
+starlette==0.46.2 # Es una dependencia de FastAPI, su versión debe ser compatible con FastAPI
+typing_extensions==4.12.2 # Importante para FastAPI y Pydantic

@@ -1,0 +1,10 @@
+# Ignorar entornos virtuales
+venv_microov_deploy/
+.venv/
+env/
+
+# Ignorar archivos específicos generados
+*.pyc
+__pycache__/
+*.log
+.DS_Store # Para usuarios de macOS
