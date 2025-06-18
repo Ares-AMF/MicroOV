@@ -1,5 +1,5 @@
 # Instalar numpy primero (Recomiendo hacer esto por separado ya que las versiones de Numpy 2.0.X no son estables)
-# pip install numpy==1.26.4
+pip install numpy==1.26.4
 
 # Dependencias para FastAPI y manejo de imágenes
 fastapi==0.115.12
