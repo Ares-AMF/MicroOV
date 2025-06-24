@@ -10,6 +10,103 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
     <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* Estilos básicos para el nuevo diseño del stream de cámara */
+        .camera-stream-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .camera-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .camera-controls button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        .camera-controls button#start-camera-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .camera-controls button#start-camera-btn:hover {
+            background-color: #45a049;
+        }
+        .camera-controls button#stop-camera-btn {
+            background-color: #f44336;
+            color: white;
+        }
+        .camera-controls button#stop-camera-btn:hover {
+            background-color: #da190b;
+        }
+        .camera-controls button#toggle-stream-btn {
+            background-color: #008CBA;
+            color: white;
+        }
+        .camera-controls button#toggle-stream-btn:hover {
+            background-color: #007bb5;
+        }
+        .camera-display {
+            position: relative;
+            width: 100%;
+            max-width: 640px; /* Ancho máximo para el video/canvas */
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #000; /* Fondo negro para el video */
+            aspect-ratio: 4/3; /* O el aspecto que esperes de la cámara */
+        }
+        .camera-display video, .camera-display canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Asegura que el video se ajuste sin cortar */
+        }
+        .camera-display canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #realtime-results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-left: 5px solid #4CAF50;
+            border-radius: 4px;
+            display: none; /* Oculto por defecto */
+        }
+        #realtime-results h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        #realtime-count-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        #realtime-count-table th, #realtime-count-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        #realtime-count-table th {
+            background-color: #f2f2f2;
+        }
+        #camera-status {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -28,6 +125,37 @@
             Sube una imagen de microscopio de tu muestra EGO y obtén un análisis detallado de los
             elementos celulares detectados usando inteligencia artificial.
         </p>
+
+        <div class="camera-stream-section">
+            <h2>Análisis en Tiempo Real con Cámara</h2>
+            <p class="description">
+                Apoya tu celular en la mirilla del microscopio para detectar elementos en tiempo real.
+            </p>
+            <div class="camera-controls">
+                <button id="start-camera-btn"><i class="fas fa-video"></i> Iniciar Cámara</button>
+                <button id="stop-camera-btn" disabled><i class="fas fa-stop-circle"></i> Detener Cámara</button>
+                <button id="toggle-stream-btn" disabled><i class="fas fa-play-circle"></i> Iniciar Detección</button>
+            </div>
+            <p id="camera-status">Cámara detenida.</p>
+            <div class="camera-display">
+                <video id="videoElement" autoplay muted playsinline></video>
+                <canvas id="canvasElement"></canvas>
+            </div>
+            <div id="realtime-results" style="display: none;">
+                <h3>Resultados en Tiempo Real</h3>
+                <p id="no-realtime-detections" style="display: none;">No se detectaron objetos.</p>
+                <table id="realtime-count-table">
+                    <thead>
+                        <tr>
+                            <th>Clase</th>
+                            <th>Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody id="realtime-count-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
         <div class="main-content">
             <div class="column">
@@ -111,5 +239,6 @@
     </div>
 
     <script src="/static/script.js"></script>
+    <script src="/static/realtime_camera.js"></script>
 </body>
 </html>
