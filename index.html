@@ -10,6 +10,123 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
     <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* ESTILOS ESPECÍFICOS PARA LA CÁMARA EN LÍNEA EN INDEX.HTML */
+        /* Estos estilos pueden ir aquí o idealmente en style.css si quieres modularizar más */
+        .camera-controls-inline {
+            display: flex;
+            flex-direction: column; /* Apilar botones verticalmente */
+            gap: 10px; /* Espacio entre botones */
+            margin-top: 20px; /* Espacio entre el uploader y los botones de cámara */
+            width: 100%; /* Ocupar todo el ancho disponible */
+            align-items: center; /* Centrar botones */
+        }
+
+        .camera-controls-inline button {
+            width: 80%; /* Ancho de los botones, ajusta si es necesario */
+            padding: 12px 15px;
+            border: 2px solid var(--primary-color); /* Usar tu color primario */
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            background-color: var(--background-color); /* Fondo negro */
+            color: var(--text-color); /* Texto blanco */
+            font-weight: bold;
+        }
+
+        .camera-controls-inline button:hover:not(:disabled) {
+            background-color: var(--primary-color); /* Cambia el fondo al hover */
+            color: var(--background-color); /* Cambia el texto al hover */
+        }
+        
+        .camera-controls-inline button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #333; /* Un poco más claro para deshabilitado */
+        }
+
+        /* Contenedor del video y canvas para el modo en línea */
+        .camera-display-inline {
+            position: relative;
+            width: 100%;
+            max-width: 480px; /* Ajusta este ancho máximo si tu diseño es más grande */
+            aspect-ratio: 4/3; /* O el aspecto que esperes de la cámara, ej. 16/9 */
+            margin: 20px auto; /* Centrar y dar espacio */
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #000; /* Fondo negro para el video */
+            display: none; /* Oculto por defecto hasta que se active la cámara */
+        }
+
+        .camera-display-inline video,
+        .camera-display-inline canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Asegura que el video se ajuste sin cortar */
+        }
+
+        .camera-display-inline canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            /* Asegúrate de que el canvas no tenga un z-index más alto que necesite ser cubierto */
+        }
+
+        #camera-status-inline {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: var(--text-color); /* Texto blanco */
+            font-size: 0.9em;
+        }
+
+        #realtime-results-inline {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--background-color-light); /* Un fondo un poco más claro que el principal */
+            border-left: 5px solid var(--primary-color);
+            border-radius: 4px;
+            display: none; /* Oculto por defecto */
+            color: var(--text-color); /* Texto blanco */
+        }
+        
+        #realtime-results-inline h3 {
+            margin-top: 0;
+            color: var(--primary-color); /* Título con color primario */
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        #realtime-count-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        #realtime-count-table th, #realtime-count-table td {
+            border: 1px solid var(--border-color); /* Color de borde de tabla */
+            padding: 8px;
+            text-align: left;
+            color: var(--text-color); /* Texto blanco */
+        }
+
+        #realtime-count-table th {
+            background-color: var(--primary-color); /* Fondo de encabezado de tabla */
+            color: var(--background-color); /* Texto en encabezado */
+        }
+        #realtime-count-table tr:nth-child(even) {
+            background-color: var(--background-color-dark); /* Filas pares un poco más oscuras */
+        }
+        #no-realtime-detections {
+            text-align: center;
+            font-style: italic;
+            color: var(--text-color-light); /* Un color de texto más suave */
+        }
+
+    </style>
 </head>
 <body>
     <div class="container">
@@ -26,7 +143,7 @@
         <h1>Análisis automático de sedimento urinario</h1>
         <p class="description">
             Sube una imagen de microscopio de tu muestra EGO y obtén un análisis detallado de los
-            elementos celulares detectados usando inteligencia artificial.
+            elementos celulares detectados usando inteligencia artificial. O utiliza la cámara para un análisis en tiempo real.
         </p>
 
         <div class="main-content">
@@ -45,9 +162,39 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="column">
+                <h2 style="margin-top: 30px;">O Análisis en Tiempo Real</h2>
+                <p class="description" style="margin-top: 10px;">
+                    Apoya tu celular en la mirilla del microscopio para detectar elementos al instante.
+                </p>
+                <div class="custom-file-uploader camera-container"> <div class="camera-controls-inline">
+                        <button id="start-camera-btn"><i class="fas fa-video"></i> Iniciar Cámara</button>
+                        <button id="stop-camera-btn" disabled><i class="fas fa-stop-circle"></i> Detener Cámara</button>
+                        <button id="toggle-stream-btn" disabled><i class="fas fa-play-circle"></i> Iniciar Detección</button>
+                    </div>
+                    <p id="camera-status-inline">Cámara detenida.</p>
+                    <div class="camera-display-inline">
+                        <video id="videoElement" autoplay muted playsinline></video>
+                        <canvas id="canvasElement"></canvas>
+                    </div>
+                </div>
+                
+                <div id="realtime-results-inline" style="display: none;">
+                    <h3>Resultados en Tiempo Real</h3>
+                    <p id="no-realtime-detections" style="display: none;">No se detectaron objetos.</p>
+                    <table id="realtime-count-table">
+                        <thead>
+                            <tr>
+                                <th>Clase</th>
+                                <th>Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody id="realtime-count-table-body">
+                        </tbody>
+                    </table>
+                </div>
+
+            </div> <div class="column">
                 <h2>Resultados de la Detección</h2>
                 <div id="results-display">
                     <p id="results-message">Sube una imagen para analizar.</p>
@@ -111,5 +258,6 @@
     </div>
 
     <script src="/static/script.js"></script>
+    <script src="/static/realtime_camera.js"></script>
 </body>
 </html>
