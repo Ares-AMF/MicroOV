@@ -1,25 +1,22 @@
 import os
 import io
 import base64
+import cv2 
+import numpy as np 
 from PIL import Image
 from ultralytics import YOLO
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.templating import Jinja2Templates # Aunque no la usas directamente, la mantengo si planeas usar Jinja2 templates
+from starlette.templating import Jinja2Templates
 from collections import defaultdict
 from typing import List, Dict
 
 # --- Configuración de rutas y modelo ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# *** CAMBIO IMPORTANTE AQUÍ ***
-# El modelo best.pt y data.yaml ahora están directamente en BASE_DIR
 MODEL_PATH = os.path.join(BASE_DIR, "best.pt")
-DATA_YAML_PATH = os.path.join(BASE_DIR, "data.yaml") # Añadido para cargar los nombres de las clases si YOLO no lo hace automáticamente.
-
 STATIC_DIR = os.path.join(BASE_DIR, "static")
-TEMPLATES_DIR = BASE_DIR # Asumiendo que index.html está en la raíz de MicroOV_Deployment
+TEMPLATES_DIR = BASE_DIR
 
 app = FastAPI(
     title="MicroV - Análisis de Sedimento Urinario",
@@ -28,39 +25,24 @@ app = FastAPI(
 )
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-templates = Jinja2Templates(directory=TEMPLATES_DIR) # Se mantiene Jinja2Templates aunque sirves HTML directo
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 # --- Cargar el modelo YOLOv8 (una vez al iniciar la aplicación) ---
 model = None
 try:
     model = YOLO(MODEL_PATH)
     print(f"Modelo YOLOv8 cargado exitosamente desde: {MODEL_PATH}")
-    
-    # Opcional: Cargar nombres de clases desde data.yaml si el modelo no los carga automáticamente
-    # (YOLO.names debería ser suficiente, pero esto es un fallback o para depuración)
-    # import yaml
-    # with open(DATA_YAML_PATH, 'r') as f:
-    #     data_config = yaml.safe_load(f)
-    #     # Asegúrate de que model.names esté bien poblado o usa data_config['names']
-    #     # si el modelo no carga las clases correctamente.
-    #     # model.names = data_config['names'] # Descomenta si necesitas forzar la carga así
-    
 except Exception as e:
     print(f"ERROR: No se pudo cargar el modelo YOLOv8 desde {MODEL_PATH}. Asegúrate de que la ruta es correcta. Detalles: {e}")
-    # Considera una salida más robusta aquí, como sys.exit(1) en un entorno de producción
 
 # --- Ruta principal para servir el HTML ---
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
-    # Asegúrate de que index.html esté en la raíz de MicroOV_Deployment
-    index_html_path = os.path.join(TEMPLATES_DIR, "index.html")
-    if not os.path.exists(index_html_path):
-        raise HTTPException(status_code=500, detail="index.html no encontrado en la ruta esperada.")
-    with open(index_html_path, "r", encoding="utf-8") as f:
+    with open(os.path.join(TEMPLATES_DIR, "index.html"), "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content)
 
-# --- Endpoint para la detección de imágenes ---
+# --- Endpoint para la detección de imágenes (existente) ---
 @app.post("/analyze_image/")
 async def analyze_image(file: UploadFile = File(...)):
     if not model:
@@ -73,59 +55,47 @@ async def analyze_image(file: UploadFile = File(...)):
         image_bytes = await file.read()
         original_image = Image.open(io.BytesIO(image_bytes))
 
-        # Realizar la inferencia con YOLOv8
-        # conf=0.25 y iou=0.7 son los umbrales de confianza y IoU, puedes ajustarlos si es necesario.
-        results = model(original_image, save=False, conf=0.25, iou=0.7)
+        results = model(original_image, save=False, conf=0.25, iou=0.7) 
 
         annotated_image_base64 = None
-        class_counts = defaultdict(int) # Para la tabla de conteo
-        detailed_detections = []        # Para la tabla de detalles
+        class_counts = defaultdict(int)
+        detailed_detections = []
 
         if results:
-            # Obtener la imagen anotada
-            # results[0].plot() devuelve un array numpy (BGR), Image.fromarray espera RGB
-            # El [..., ::-1] es para convertir de BGR a RGB
-            annotated_image_np = results[0].plot()
-            annotated_image_pil = Image.fromarray(annotated_image_np[..., ::-1])
+            first_result = results[0]
+            annotated_image_np = first_result.plot()
+            annotated_image_pil = Image.fromarray(annotated_image_np[..., ::-1]) 
 
             buffered = io.BytesIO()
             annotated_image_pil.save(buffered, format="PNG")
             annotated_image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-            # Recopilar datos de las detecciones
-            for r in results:
-                if r.boxes:
-                    for box in r.boxes:
-                        clase_id = int(box.cls)
-                        # model.names debería contener los nombres de las clases cargados desde best.pt
-                        # Si tienes problemas, puedes forzar la carga de data.yaml y usar data_config['names'][clase_id]
-                        nombre_clase = model.names[clase_id] 
-                        confianza = box.conf.item()
-                        bbox = box.xyxy[0].tolist()
+            if first_result.boxes:
+                for box in first_result.boxes:
+                    clase_id = int(box.cls)
+                    nombre_clase = model.names[clase_id]
+                    confianza = box.conf.item()
+                    bbox = box.xyxy[0].tolist()
 
-                        # Para la tabla de conteo
-                        class_counts[nombre_clase] += 1
-                        
-                        # Para la tabla de detalles
-                        detailed_detections.append({
-                            "clase": nombre_clase,
-                            "confianza": f"{confianza:.2f}",
-                            "bbox": [round(coord) for coord in bbox] # Redondea coordenadas para limpieza
-                        })
+                    class_counts[nombre_clase] += 1
+                    
+                    detailed_detections.append({
+                        "clase": nombre_clase,
+                        "confianza": f"{confianza:.2f}",
+                        "bbox": [round(coord) for coord in bbox]
+                    })
         
         return {
             "status": "success",
             "annotated_image_base64": annotated_image_base64,
-            "class_counts": dict(class_counts), # Convertir defaultdict a dict para JSON
-            "detailed_detections": detailed_detections # Enviar la lista de detalles
+            "class_counts": dict(class_counts),
+            "detailed_detections": detailed_detections
         }
 
     except Exception as e:
-        # Registra el error completo para depuración en un entorno real
-        print(f"Error durante el procesamiento: {e}") 
+        print(f"Error interno durante el análisis de la imagen: {e}")
         raise HTTPException(status_code=500, detail=f"Error interno al procesar la imagen: {e}")
 
-# --- Endpoint para la descarga de imagen anotada (sin cambios) ---
 @app.get("/download_annotated_image/")
 async def download_annotated_image(image_data: str):
     try:
@@ -133,3 +103,76 @@ async def download_annotated_image(image_data: str):
         return StreamingResponse(io.BytesIO(image_bytes), media_type="image/png")
     except Exception as e:
         raise HTTPException(status_code=400, detail="Datos de imagen base64 inválidos.")
+
+# --- NUEVO: Endpoint WebSocket para stream de video en tiempo real ---
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    print("Conexión WebSocket establecida con el cliente.")
+    try:
+        while True:
+            # Esperar a recibir un mensaje (fotograma) del cliente
+            # Asumimos que el cliente envía un string base64 de una imagen JPEG
+            data = await websocket.receive_text()
+
+            # Extraer los bytes de la imagen del string base64
+            # Eliminar el prefijo "data:image/jpeg;base64," si existe
+            if data.startswith("data:image/jpeg;base64,"):
+                image_data = data.split(",")[1]
+            elif data.startswith("data:image/png;base64,"):
+                image_data = data.split(",")[1]
+            else:
+                image_data = data # Si solo se envía el base64 puro
+
+            image_bytes = base64.b64decode(image_data)
+            
+            # Convertir bytes a un array numpy de OpenCV
+            nparr = np.frombuffer(image_bytes, np.uint8)
+            img_np = cv2.imdecode(nparr, cv2.IMREAD_COLOR) # Decodificar como imagen de color
+
+            if img_np is None:
+                print("Error al decodificar la imagen recibida. Saltando fotograma.")
+                continue
+
+            # Convertir de BGR (OpenCV) a RGB (YOLOv8 espera RGB o similar) si es necesario.
+            # Ultralytics generalmente maneja esto internamente, pero si tienes problemas,
+            # descomenta la siguiente línea:
+            # img_rgb = cv2.cvtColor(img_np, cv2.COLOR_BGR2RGB)
+
+            # Realizar inferencia con YOLOv8
+            results = model(img_np, save=False, conf=0.25, iou=0.7, verbose=False) # verbose=False para menos logs en cada fotograma
+
+            detections_to_send = []
+            if results:
+                first_result = results[0]
+                if first_result.boxes:
+                    for box in first_result.boxes:
+                        clase_id = int(box.cls)
+                        nombre_clase = model.names[clase_id]
+                        confianza = box.conf.item()
+                        bbox = box.xyxy[0].tolist() # [x1, y1, x2, y2]
+
+                        detections_to_send.append({
+                            "clase": nombre_clase,
+                            "confianza": round(confianza, 2),
+                            "bbox": [round(coord) for coord in bbox]
+                        })
+                
+                # Opcional: Enviar también la imagen anotada de vuelta (puede ser pesado para tiempo real)
+                # annotated_img_np = first_result.plot()
+                # is_success, im_buf_arr = cv2.imencode(".jpg", annotated_img_np)
+                # if is_success:
+                #     annotated_img_base64 = base64.b64encode(im_buf_arr).decode('utf-8')
+                #     # Puedes enviar esto junto con las detecciones, o por separado
+                #     # Si lo envías junto, el frontend tiene que saber qué esperar
+                #     # Para simplicidad inicial, solo enviamos los datos de las detecciones
+            
+            # Enviar los resultados de las detecciones de vuelta al cliente
+            await websocket.send_json({"detections": detections_to_send})
+
+    except WebSocketDisconnect:
+        print("Cliente WebSocket desconectado.")
+    except Exception as e:
+        print(f"Error en el WebSocket: {e}")
+    finally:
+        await websocket.close()
