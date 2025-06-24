@@ -162,11 +162,11 @@ async def websocket_endpoint(websocket: WebSocket):
                 # annotated_img_np = first_result.plot()
                 # is_success, im_buf_arr = cv2.imencode(".jpg", annotated_img_np)
                 # if is_success:
-                #     annotated_img_base64 = base64.b64encode(im_buf_arr).decode('utf-8')
-                #     # Puedes enviar esto junto con las detecciones, o por separado
-                #     # Si lo envías junto, el frontend tiene que saber qué esperar
-                #     # Para simplicidad inicial, solo enviamos los datos de las detecciones
-            
+                #    annotated_img_base64 = base64.b64encode(im_buf_arr).decode('utf-8')
+                #    # Puedes enviar esto junto con las detecciones, o por separado
+                #    # Si lo envías junto, el frontend tiene que saber qué esperar
+                #    # Para simplicidad inicial, solo enviamos los datos de las detecciones
+                
             # Enviar los resultados de las detecciones de vuelta al cliente
             await websocket.send_json({"detections": detections_to_send})
 
@@ -175,4 +175,4 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         print(f"Error en el WebSocket: {e}")
     finally:
-        await websocket.close()
+        pass 
