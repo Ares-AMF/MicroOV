@@ -1,12 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Asegúrate de que estos IDs coincidan con los del HTML
     const videoElement = document.getElementById('videoElement');
     const canvasElement = document.getElementById('canvasElement');
     const context = canvasElement.getContext('2d');
+    
+    // Botones reubicados
     const startCameraButton = document.getElementById('start-camera-btn');
     const stopCameraButton = document.getElementById('stop-camera-btn');
     const toggleStreamButton = document.getElementById('toggle-stream-btn');
-    const cameraStatusElement = document.getElementById('camera-status');
-    const realtimeResultsDiv = document.getElementById('realtime-results');
+
+    // Elementos de estado y resultados
+    const cameraStatusElement = document.getElementById('camera-status-inline'); // Nuevo ID
+    const cameraDisplayContainer = document.querySelector('.camera-display-inline'); // Nuevo selector
+    const realtimeResultsDiv = document.getElementById('realtime-results-inline'); // Nuevo ID
     const realtimeCountTableBody = document.getElementById('realtime-count-table-body');
     const noRealtimeDetectionsMessage = document.getElementById('no-realtime-detections');
 
@@ -20,39 +26,46 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función para dibujar los bounding boxes y etiquetas
     function drawDetections(detections) {
         // Limpiar el canvas antes de dibujar el nuevo fotograma y las detecciones
-        context.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        // Nota: Si el video se muestra por debajo del canvas, NO LIMPIES.
+        // Dibuja el fotograma del video en el canvas, luego las detecciones.
+        // Si el video está en un elemento y el canvas encima, solo limpia las detecciones.
         
-        // Es importante dibujar el fotograma de video actual ANTES de las detecciones
-        // Asegúrate de que el video está listo y tiene dimensiones
+        // La implementación actual asume que el canvas DIBUJA el video + detecciones.
+        // Es crucial que el video NO se muestre directamente sino a través del canvas
+        // para que las detecciones se superpongan correctamente.
+        // Asegúrate de que el videoElement esté visible o que se dibuje en el canvas.
+        // Si el videoElement está `display: block` y el canvas `position: absolute` encima,
+        // entonces el canvas es el que debe dibujar el video.
+        
+        // Primero, dibuja el fotograma actual del video en el canvas
         if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
             context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+        } else {
+            // Si el video no está listo, limpia el canvas para no mostrar detecciones antiguas
+            context.clearRect(0, 0, canvasElement.width, canvasElement.height);
         }
 
         detections.forEach(det => {
             const [x1, y1, x2, y2] = det.bbox;
             const label = `${det.clase} (${det.confianza})`;
 
-            // Escalar las coordenadas si el canvas tiene un tamaño diferente al del video
-            // Asumimos que el backend envía las coordenadas relativas al tamaño original del video
-            // Si el backend envía coordenadas basadas en la imagen enviada, y el video/canvas tienen la misma proporción,
-            // esta escala es directa. Si no, se necesita un cálculo más complejo.
-            const scaleX = canvasElement.width / videoElement.videoWidth;
-            const scaleY = canvasElement.height / videoElement.videoHeight;
-
-            const scaledX1 = x1 * scaleX;
-            const scaledY1 = y1 * scaleY;
-            const scaledX2 = x2 * scaleX;
-            const scaledY2 = y2 * scaleY;
+            // Escalar las coordenadas si el canvas/video tienen un tamaño diferente al que esperas
+            // Asegúrate que las coordenadas del backend están alineadas con la resolución que envías.
+            // Si el canvas tiene el mismo tamaño que el videoElement.videoWidth/Height, no se necesita escala.
+            // Si el CSS escala el video/canvas, las coordenadas de dibujo en el canvas serán relativas al tamaño del canvas.
 
             context.beginPath();
-            context.rect(scaledX1, scaledY1, scaledX2 - scaledX1, scaledY2 - scaledY1);
+            context.rect(x1, y1, x2 - x1, y2 - y1); // Usar coords directas si no hay escalado o ya escalado
             context.lineWidth = 2;
-            context.strokeStyle = 'red';
-            context.fillStyle = 'red';
+            context.strokeStyle = 'lime'; // Un color que contraste con el fondo oscuro
+            context.fillStyle = 'lime';
             context.stroke();
 
-            context.font = '14px Arial';
-            context.fillText(label, scaledX1, scaledY1 > 10 ? scaledY1 - 5 : 10);
+            context.font = '16px Arial';
+            context.fillStyle = 'white'; // Texto blanco para la etiqueta
+            // Ajustar la posición del texto para que no se salga por arriba si el bbox está muy arriba
+            const textY = y1 > 20 ? y1 - 5 : y1 + 20; 
+            context.fillText(label, x1 + 5, textY);
         });
     }
 
@@ -90,10 +103,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Preferir la cámara trasera ("environment")
-            const constraints = { video: { facingMode: "environment" } };
+            const constraints = { 
+                video: { 
+                    facingMode: "environment",
+                    width: { ideal: 640 }, // Pedir una resolución ideal para rendimiento
+                    height: { ideal: 480 }
+                } 
+            };
             mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
             videoElement.srcObject = mediaStream;
             cameraStatusElement.textContent = "Cámara activa. Esperando iniciar detección...";
+            cameraDisplayContainer.style.display = 'block'; // Mostrar el contenedor de video/canvas
             
             // Cuando el video cargue, ajustar el tamaño del canvas
             videoElement.onloadedmetadata = () => {
@@ -126,6 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
         stopStreaming(); // Asegurarse de detener el streaming también
         realtimeResultsDiv.style.display = 'none'; // Ocultar resultados
         context.clearRect(0, 0, canvasElement.width, canvasElement.height); // Limpiar canvas
+        cameraDisplayContainer.style.display = 'none'; // Ocultar el contenedor de video/canvas
     }
 
     // --- Funciones de WebSocket y Streaming ---
@@ -149,6 +170,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ws.onmessage = (event) => {
             const response = JSON.parse(event.data);
             if (response && response.detections) {
+                // Dibujar el fotograma del video en el canvas antes de las detecciones
+                if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+                    context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+                }
                 drawDetections(response.detections);
                 updateCountTable(response.detections);
             }
@@ -180,15 +205,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startSendingFrames() {
-        if (!mediaStream || !streaming) return;
-
-        // Limpiar canvas y dibujar el fotograma actual del video
-        context.clearRect(0, 0, canvasElement.width, canvasElement.height);
-        if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
-            context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+        if (!mediaStream || !streaming) {
+             console.log("Deteniendo envío de frames: no hay stream o no se está haciendo streaming.");
+             return;
         }
 
         // Obtener la imagen del canvas como Base64 (JPEG es más eficiente)
+        // Asegúrate de que el videoElement.videoWidth y videoElement.videoHeight tienen valores
+        if (videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
+            console.warn("Video no tiene dimensiones válidas. Reintentando...");
+            animationFrameId = requestAnimationFrame(startSendingFrames);
+            return;
+        }
+
+        // Antes de enviar, dibujamos el frame actual del video en el canvas.
+        // Esto es crucial para que el canvas siempre tenga el frame más reciente.
+        context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+
         const imageDataURL = canvasElement.toDataURL('image/jpeg', 0.7); // Calidad 70%
 
         if (ws && ws.readyState === WebSocket.OPEN) {
@@ -200,8 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Programar el siguiente fotograma para la detección
-        // Usar setTimeout para controlar la tasa de frames (ej. 100ms = 10 FPS)
-        // o requestAnimationFrame para una experiencia más fluida y sincronizada con el navegador
         animationFrameId = requestAnimationFrame(startSendingFrames);
     }
 
@@ -212,13 +243,19 @@ document.addEventListener('DOMContentLoaded', () => {
             disconnectWebSocket(); // Cierra el WebSocket
         }
         cancelAnimationFrame(animationFrameId); // Detener el bucle de envío
+        animationFrameId = null; // Reiniciar para el próximo inicio
         cameraStatusElement.textContent = "Cámara activa. Stream de detección detenido.";
+        
         // Limpiar las detecciones dibujadas en el canvas, pero mantener el video
-        context.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        // Es importante REDIBUJAR el fotograma del video después de limpiar,
+        // para que solo se borren las cajas y el video siga viéndose.
         if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
-             context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+            context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+        } else {
+            context.clearRect(0, 0, canvasElement.width, canvasElement.height); // Si no hay video, limpiar todo
         }
         realtimeResultsDiv.style.display = 'none'; // Ocultar resultados
+        noRealtimeDetectionsMessage.style.display = 'none'; // Ocultar mensaje
     }
 
     // --- Event Listeners ---
@@ -235,7 +272,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert("Por favor, inicia la cámara primero.");
                 return;
             }
-            connectWebSocket(); // Esto iniciará el streaming en el onopen
+            // Conectar el WebSocket e iniciar el envío de frames
+            connectWebSocket(); 
         }
     });
 
