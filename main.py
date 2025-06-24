@@ -182,10 +182,27 @@ async def websocket_endpoint(websocket: WebSocket):
                     print("ADVERTENCIA: WebSocket: No se pudo decodificar la imagen recibida. Saltando fotograma.")
                     continue
 
+                # --- OPTIMIZACIÓN CRÍTICA AQUÍ ---
+                # Reducir las dimensiones de la imagen al 25% del original
+                # Esto es crucial para el rendimiento en entornos con recursos limitados.
+                # Asegúrate de que las dimensiones resultantes no sean cero o muy pequeñas.
+                new_width = img_np.shape[1] // 4
+                new_height = img_np.shape[0] // 4
+                
+                if new_width == 0 or new_height == 0:
+                    print("ADVERTENCIA: WebSocket: Dimensiones de imagen después de redimensionar son cero. Saltando fotograma.")
+                    continue
+                
+                resized_img_np = cv2.resize(img_np, (new_width, new_height))
+
+                # print("DEBUG: WebSocket: Imagen redimensionada y lista para inferencia.")
                 # Realizar inferencia con YOLOv8
-                # verbose=False para no inundar los logs de Render
-                # conf y iou pueden ajustarse según tu modelo y necesidades
-                results = model(img_np, save=False, conf=0.3, iou=0.7, verbose=False) 
+                # conf=0.5: Solo reporta detecciones con al menos 50% de confianza. Reduce ruido y procesamiento.
+                # iou=0.5: Umbral de Non-Maximum Suppression.
+                # device="cpu": Fuerza la ejecución en CPU. Es clave para Render Free Tier.
+                # verbose=False: Reduce los logs de YOLOv8 para no saturar Render.
+                results = model(resized_img_np, save=False, conf=0.5, iou=0.5, verbose=False, device="cpu") 
+                # print("DEBUG: WebSocket: Inferencia de YOLOv8 completada.")
 
                 detections_to_send = []
                 if results and len(results) > 0:
@@ -213,7 +230,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 # print(f"DEBUG: WebSocket: Detecciones enviadas: {len(detections_to_send)} objetos.")
 
             except WebSocketDisconnect:
-                # print("INFO: WebSocket: Cliente se ha desconectado limpiamente.")
+                print("INFO: WebSocket: Cliente se ha desconectado limpiamente.")
                 break # Sale del bucle while True
             except Exception as e:
                 print(f"ERROR: WebSocket: Error en el procesamiento del fotograma o envío: {e}")
