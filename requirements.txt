@@ -32,3 +32,4 @@ requests==2.32.4
 sniffio==1.3.1
 starlette==0.46.2 # Es una dependencia de FastAPI, su versión debe ser compatible con FastAPI
 typing_extensions==4.12.2 # Importante para FastAPI y Pydantic
+psutil #Para monitorear los recursos que se estan utilizando
