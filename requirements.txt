@@ -4,6 +4,7 @@ numpy==1.26.4
 # Dependencias para FastAPI y manejo de imágenes
 fastapi==0.115.12
 uvicorn==0.34.3
+websockets #Instalados aparte porque Uvicrn no vale madre
 Pillow==11.0.0
 python-multipart==0.0.20 # Para manejo de subidas de archivos en FastAPI
 Jinja2==3.1.4 # Aunque no lo uses directamente, es una dependencia de FastAPI si usas templates
