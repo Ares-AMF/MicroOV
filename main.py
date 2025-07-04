@@ -22,7 +22,7 @@ TEMPLATES_DIR = BASE_DIR # Si index.html está en la raíz junto a main.py
 app = FastAPI(
     title="MicroV - Análisis de Sedimento Urinario",
     description="API para la detección de elementos en sedimento urinario usando YOLOv8.",
-    version="1.0.0"
+    version="1.0.0",
     root_path="/proxy/8000"
 )
 
