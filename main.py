@@ -23,6 +23,7 @@ app = FastAPI(
     title="MicroV - Análisis de Sedimento Urinario",
     description="API para la detección de elementos en sedimento urinario usando YOLOv8.",
     version="1.0.0"
+    root_path="/proxy/8000"
 )
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
